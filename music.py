@@ -66,6 +66,7 @@ class MusicCog(commands.Cog):
             guild.voice_client.play(source, after=after)
 
     @commands.command(name="join")
+    @commands.cooldown(1, 10, commands.BucketType.user)
     async def join(self, ctx: commands.Context):
         """Join your voice channel."""
         if not ctx.author.voice:
@@ -152,6 +153,7 @@ class MusicCog(commands.Cog):
         await ctx.send("Stopped and cleared the queue.")
 
     @commands.command(name="leave", aliases=["disconnect", "dc"])
+    @commands.cooldown(1, 10, commands.BucketType.user)
     async def leave(self, ctx: commands.Context):
         """Leave the voice channel."""
         if ctx.voice_client:
@@ -160,3 +162,12 @@ class MusicCog(commands.Cog):
             await ctx.send("Disconnected.")
         else:
             await ctx.send("I'm not in a voice channel.")
+
+    @join.error
+    @leave.error
+    async def cooldown_error(self, ctx, error):
+        if isinstance(error, commands.CommandOnCooldown):
+            await ctx.send(
+                f"Slow down! Try again in {error.retry_after:.0f}s.",
+                delete_after=5,
+            )
