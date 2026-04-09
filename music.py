@@ -28,6 +28,28 @@ class MusicCog(commands.Cog):
         # guild_id -> list of (title, url)
         self.queues: dict[int, list[tuple[str, str]]] = {}
 
+    @commands.Cog.listener()
+    async def on_voice_state_update(self, member, before, after):
+        """Leave voice channel if the bot is alone."""
+        if member.bot:
+            return
+
+        # Only care about someone leaving a channel
+        if before.channel is None:
+            return
+
+        guild = member.guild
+        if not guild.voice_client or guild.voice_client.channel != before.channel:
+            return
+
+        # Count non-bot members in the channel
+        real_members = [m for m in before.channel.members if not m.bot]
+        if len(real_members) == 0:
+            self._get_queue(guild.id).clear()
+            if guild.voice_client.is_playing():
+                guild.voice_client.stop()
+            await guild.voice_client.disconnect()
+
     def _get_queue(self, guild_id: int) -> list:
         if guild_id not in self.queues:
             self.queues[guild_id] = []
