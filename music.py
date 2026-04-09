@@ -4,7 +4,7 @@ import asyncio
 import yt_dlp
 
 YTDL_OPTIONS = {
-    "format": "bestaudio/best",
+    "format": "bestaudio[ext=webm]/bestaudio[ext=m4a]/bestaudio/best",
     "noplaylist": True,
     "quiet": True,
     "no_warnings": True,
@@ -41,7 +41,15 @@ class MusicCog(commands.Cog):
             info = ytdl.extract_info(query, download=False)
             if "entries" in info:
                 info = info["entries"][0]
-            return info["title"], info["url"]
+            # Try to get a direct URL, fall back to formats list
+            url = info.get("url")
+            if not url:
+                formats = info.get("formats", [])
+                for f in reversed(formats):
+                    if f.get("url"):
+                        url = f["url"]
+                        break
+            return info["title"], url
 
         try:
             return await loop.run_in_executor(None, extract)
