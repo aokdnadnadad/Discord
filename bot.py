@@ -61,11 +61,6 @@ async def commands_list(ctx):
         inline=False,
     )
     embed.add_field(
-        name="Moderation (Admin only)",
-        value="**?purge <number>** — Delete messages (works in any channel)",
-        inline=False,
-    )
-    embed.add_field(
         name="Invites",
         value=(
             "**?invites** — Check your invite count\n"
