@@ -130,6 +130,33 @@ class InviteTrackerCog(commands.Cog):
             except discord.Forbidden:
                 print(f"Missing permissions to assign role to {member.name}")
 
+    @commands.command(name="invitesleaderboard", aliases=["itleaderboard", "invitetop"])
+    async def invite_leaderboard(self, ctx: commands.Context):
+        """Show the top inviters in the server."""
+        guild_key = str(ctx.guild.id)
+        counts = self.invite_counts.get(guild_key, {})
+
+        if not counts:
+            return await ctx.send("No invite data yet.")
+
+        sorted_counts = sorted(counts.items(), key=lambda x: x[1], reverse=True)[:10]
+
+        embed = discord.Embed(
+            title="Invite Leaderboard",
+            color=discord.Color.from_rgb(255, 105, 180),
+        )
+
+        lines = []
+        medals = {1: "🥇", 2: "🥈", 3: "🥉"}
+        for rank, (user_id, count) in enumerate(sorted_counts, 1):
+            member = ctx.guild.get_member(int(user_id))
+            name = member.display_name if member else f"Unknown ({user_id})"
+            prefix = medals.get(rank, f"**{rank}.**")
+            lines.append(f"{prefix} {name} — {count} invite(s)")
+
+        embed.description = "\n".join(lines)
+        await ctx.send(embed=embed)
+
     @commands.command(name="invites")
     async def check_invites(self, ctx: commands.Context, member: discord.Member = None):
         """Check how many invites a user has. Usage: !invites [@user]"""
