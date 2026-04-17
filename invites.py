@@ -115,18 +115,30 @@ class InviteTrackerCog(commands.Cog):
                 )
                 self._had_previous_join[guild.id] = True
 
-        # DM welcome message — currently sent to #ticket-logs for testing
-        dm_test_channel = discord.utils.get(guild.text_channels, name="ticket-logs")
-        if dm_test_channel:
-            await dm_test_channel.send(
-                f"**[DM TEST — recipient: {member.mention}]**\n\n"
-                f"You made it. Thank you so much for joining Obliveyon.\n\n"
-                f"Not everyone finds this place — but you did. That already says something about you.\n\n"
-                f"The launch is coming, 5 · 21 · 26 — you're already ahead of everyone else. "
-                f"Sign up now, lock in your spot, and you'll automatically be entered for a chance "
-                f"to walk away with a free zip up from us.\n\n"
-                f"👉 [obliveyon.com](<https://obliveyon.com>) ⚔️\n\n"
-                f"Welcome to the chosen ⚔️"
+        # DM welcome message
+        dm_message = (
+            f"You made it. Thank you so much for joining Obliveyon.\n\n"
+            f"Not everyone finds this place — but you did. That already says something about you.\n\n"
+            f"The launch is coming, 5 · 21 · 26 — you're already ahead of everyone else. "
+            f"Sign up now, lock in your spot, and you'll automatically be entered for a chance "
+            f"to walk away with a free zip up from us.\n\n"
+            f"👉 [obliveyon.com](<https://obliveyon.com>) ⚔️\n\n"
+            f"Welcome to the chosen ⚔️"
+        )
+        dm_sent = False
+        try:
+            await member.send(dm_message)
+            dm_sent = True
+        except (discord.Forbidden, discord.HTTPException):
+            pass
+
+        # Log the DM to #bot-dm-logs
+        dm_log_channel = discord.utils.get(guild.text_channels, name="bot-dm-logs")
+        if dm_log_channel:
+            status = "✅ Delivered" if dm_sent else "❌ Failed (DMs disabled)"
+            await dm_log_channel.send(
+                f"**DM sent to {member.mention} ({member})**  —  {status}\n"
+                f">>> {dm_message}"
             )
 
         if inviter is None or inviter.bot:
