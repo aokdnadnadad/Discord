@@ -86,7 +86,13 @@ class InviteTrackerCog(commands.Cog):
         if welcome_channel:
             border = "─" * 40
             async with self._welcome_lock:
-                top = await welcome_channel.send(
+                import datetime
+                now = discord.utils.utcnow()
+                # If we're in the last 3 seconds of a minute, wait until the next minute starts
+                # so all 3 messages land in the same minute
+                if now.second >= 57:
+                    await asyncio.sleep(60 - now.second + 1)
+                await welcome_channel.send(
                     f"{border}\n"
                     f"Welcome {member.mention} — you've found your way here for a reason.\n"
                     f"You are amongst the chosen now. Be the light in the Darkness. Clothing drop coming 5/21/26.\n"
@@ -94,11 +100,9 @@ class InviteTrackerCog(commands.Cog):
                     f"and enter for a chance to win a free hoodie. 🖤⚔️"
                 )
                 await welcome_channel.send(
-                    "https://cdn.discordapp.com/attachments/1049742034526806046/1490478452166627601/ezgif-8ea71cc67d438330.gif",
-                    reference=top,
-                    mention_author=False,
+                    "https://cdn.discordapp.com/attachments/1049742034526806046/1490478452166627601/ezgif-8ea71cc67d438330.gif"
                 )
-                await welcome_channel.send(border, reference=top, mention_author=False)
+                await welcome_channel.send(border)
 
         if inviter is None or inviter.bot:
             return
