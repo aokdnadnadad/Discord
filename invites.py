@@ -108,7 +108,7 @@ class InviteTrackerCog(commands.Cog):
                     f"Welcome {member.mention} — you've found your way here for a reason.\n"
                     f"You are amongst the chosen now. Be the light in the Darkness. Clothing drop coming 5/21/26.\n"
                     f"Be ready, sign up at [obliveyon.com](<https://obliveyon.com>) to secure your place — "
-                    f"and enter for a chance to win a free hoodie. 🖤⚔️"
+                    f"and enter for a chance to win a free zip up. 🖤⚔️"
                 )
                 await welcome_channel.send(
                     "https://cdn.discordapp.com/attachments/1049742034526806046/1490478452166627601/ezgif-8ea71cc67d438330.gif"
@@ -124,9 +124,9 @@ class InviteTrackerCog(commands.Cog):
                 f"Not everyone finds this place — but you did. That already says something about you.\n\n"
                 f"The launch is coming, 5 · 21 · 26 — you're already ahead of everyone else. "
                 f"Sign up now, lock in your spot, and you'll automatically be entered for a chance "
-                f"to walk away with a free hoodie from us.\n\n"
+                f"to walk away with a free zip up from us.\n\n"
                 f"👉 [obliveyon.com](<https://obliveyon.com>)\n\n"
-                f"Welcome to the chosen"
+                f"Welcome to the chosen ⚔️"
             )
 
         if inviter is None or inviter.bot:
