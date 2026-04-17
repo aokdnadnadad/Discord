@@ -11,7 +11,7 @@ LINK_PATTERN = re.compile(
 )
 
 # Allowed domains — obliveyon.com is permitted
-ALLOWED_DOMAINS = ["obliveyon.com"]
+ALLOWED_DOMAINS = ["obliveyon.com", "tenor.com", "giphy.com"]
 
 # Slurs and variations to filter (kept minimal and hashed-out for code readability)
 # Each entry is a regex pattern to catch common evasion attempts
