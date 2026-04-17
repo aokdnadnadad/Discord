@@ -19,6 +19,8 @@ class InviteTrackerCog(commands.Cog):
         # guild_id -> {inviter_id: count}
         self.invite_counts: dict[str, dict[str, int]] = {}
         self._welcome_lock = asyncio.Lock()
+        # guild_id -> True if at least one welcome has been sent this session
+        self._had_previous_join: dict[int, bool] = {}
         self._load_data()
 
     def _load_data(self):
@@ -94,12 +96,14 @@ class InviteTrackerCog(commands.Cog):
         if welcome_channel:
             border = "─" * 35
             async with self._welcome_lock:
-                import datetime
                 now = discord.utils.utcnow()
                 # If we're in the last 3 seconds of a minute, wait until the next minute starts
-                # so all 3 messages land in the same minute
+                # so all messages land in the same minute
                 if now.second >= 57:
                     await asyncio.sleep(60 - now.second + 1)
+                # Send closing border for the previous member first
+                if self._had_previous_join.get(guild.id, False):
+                    await welcome_channel.send(border)
                 await welcome_channel.send(
                     f"Welcome {member.mention} — you've found your way here for a reason.\n"
                     f"You are amongst the chosen now. Be the light in the Darkness. Clothing drop coming 5/21/26.\n"
@@ -109,7 +113,7 @@ class InviteTrackerCog(commands.Cog):
                 await welcome_channel.send(
                     "https://cdn.discordapp.com/attachments/1049742034526806046/1490478452166627601/ezgif-8ea71cc67d438330.gif"
                 )
-                await welcome_channel.send(border)
+                self._had_previous_join[guild.id] = True
 
         if inviter is None or inviter.bot:
             return
