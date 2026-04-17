@@ -120,7 +120,7 @@ class InviteTrackerCog(commands.Cog):
         if dm_test_channel:
             await dm_test_channel.send(
                 f"**[DM TEST — recipient: {member.mention}]**\n\n"
-                f"You made it. Thank you so much for joining.\n\n"
+                f"You made it. Thank you so much for joining Obliveyon.\n\n"
                 f"Not everyone finds this place — but you did. That already says something about you.\n\n"
                 f"The launch is coming, 5 · 21 · 26 — you're already ahead of everyone else. "
                 f"Sign up now, lock in your spot, and you'll automatically be entered for a chance "
