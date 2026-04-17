@@ -93,7 +93,6 @@ class InviteTrackerCog(commands.Cog):
                 if now.second >= 57:
                     await asyncio.sleep(60 - now.second + 1)
                 await welcome_channel.send(
-                    f"{border}\n"
                     f"Welcome {member.mention} — you've found your way here for a reason.\n"
                     f"You are amongst the chosen now. Be the light in the Darkness. Clothing drop coming 5/21/26.\n"
                     f"Be ready, sign up at [obliveyon.com](<https://obliveyon.com>) to secure your place — "
