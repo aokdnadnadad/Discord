@@ -84,7 +84,7 @@ class ModerationCog(commands.Cog):
                 if blocked:
                     await message.delete()
                     await message.channel.send(
-                        f"{message.author.mention}, links are not allowed in this server for safety reasons.",
+                        f"Hey {message.author.mention}, we don't allow links in this server to keep everyone safe — no worries though, it happens! 🖤",
                         delete_after=8,
                     )
                     # Log to #bot-dm-logs
