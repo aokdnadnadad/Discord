@@ -2,6 +2,17 @@ import discord
 from discord.ext import commands
 import re
 
+from log_utils import send_mod_log
+
+# Matches URLs (http/https/www and bare domains like discord.gg/xxx)
+LINK_PATTERN = re.compile(
+    r"(https?://|www\.|\bdiscord\.gg/)[^\s]+",
+    re.IGNORECASE,
+)
+
+# Allowed domains — obliveyon.com is permitted
+ALLOWED_DOMAINS = ["obliveyon.com"]
+
 # Slurs and variations to filter (kept minimal and hashed-out for code readability)
 # Each entry is a regex pattern to catch common evasion attempts
 SLUR_PATTERNS = [
@@ -23,25 +34,68 @@ class ModerationCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
+    def _has_wanderer_role(self, member: discord.Member) -> bool:
+        return discord.utils.get(member.roles, name="The Wanderer") is not None
+
+    def _is_privileged(self, member: discord.Member) -> bool:
+        has_owner = discord.utils.get(member.roles, name="Owner") is not None
+        has_mod = discord.utils.get(member.roles, name="Moderator") is not None
+        return has_owner or has_mod or member.guild_permissions.administrator
+
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         if message.author.bot:
             return
-        if message.author.guild_permissions.administrator:
+        if self._is_privileged(message.author):
             return
 
         text = message.content.lower().strip()
 
+        # Slur filter
         for pattern in COMPILED_PATTERNS:
             if pattern.search(text):
                 await message.delete()
                 warning = await message.channel.send(
                     f"{message.author.mention}, that language is not allowed here."
                 )
-                # Auto-delete the warning after 5 seconds
                 await warning.delete(delay=5)
                 print(f"Deleted message from {message.author} in {message.guild.name}: slur detected")
+                await send_mod_log(
+                    message.guild,
+                    "SLUR_DELETE",
+                    target=message.author,
+                    moderator=None,
+                    details=f"Channel: #{message.channel.name}",
+                )
                 return
+
+        # Link filter — only applies to members with The Wanderer role
+        if self._has_wanderer_role(message.author):
+            links = LINK_PATTERN.findall(message.content)
+            if links:
+                # Check if all links are from allowed domains
+                blocked = False
+                for match in re.finditer(r"(https?://|www\.|\bdiscord\.gg/)([^\s]+)", message.content, re.IGNORECASE):
+                    full = match.group(0).lower()
+                    if not any(domain in full for domain in ALLOWED_DOMAINS):
+                        blocked = True
+                        break
+
+                if blocked:
+                    await message.delete()
+                    await message.channel.send(
+                        f"{message.author.mention}, links are not allowed in this server for safety reasons.",
+                        delete_after=8,
+                    )
+                    # Log to #bot-dm-logs
+                    log_channel = discord.utils.get(message.guild.text_channels, name="bot-dm-logs")
+                    if log_channel:
+                        await log_channel.send(
+                            f"🔗 **Link blocked** — {message.author.mention} (`{message.author}`) "
+                            f"in #{message.channel.name}\n"
+                            f">>> {message.content[:500]}"
+                        )
+                    return
 
     @commands.command(name="purge", hidden=True)
     async def purge(self, ctx: commands.Context, first=None, second: int = None):
@@ -53,14 +107,12 @@ class ModerationCog(commands.Cog):
         target = None
         amount = None
 
-        # Parse arguments: ?purge 10 or ?purge @user 10
         if first is None:
             return await ctx.send("Usage: `?purge <number>` or `?purge @user <number>`", delete_after=5)
 
         try:
             amount = int(first)
         except (ValueError, TypeError):
-            # first arg is a user mention
             converter = commands.MemberConverter()
             try:
                 target = await converter.convert(ctx, first)
@@ -74,17 +126,28 @@ class ModerationCog(commands.Cog):
         await ctx.message.delete()
 
         if target:
-            count = 0
-            async for msg in ctx.channel.history(limit=1000):
-                if count >= amount:
+            to_delete = []
+            async for msg in ctx.channel.history(limit=None):
+                if len(to_delete) >= amount:
                     break
                 if msg.author == target:
-                    await msg.delete()
-                    count += 1
+                    to_delete.append(msg)
+            count = 0
+            for msg in to_delete:
+                await msg.delete()
+                count += 1
             await ctx.author.send(f"Deleted **{count}** messages from {target.name} in #{ctx.channel.name}.")
+            await send_mod_log(
+                ctx.guild, "PURGE", target=target, moderator=ctx.author,
+                details=f"Deleted {count} messages from {target} in #{ctx.channel.name}"
+            )
         else:
             deleted = await ctx.channel.purge(limit=amount)
             await ctx.author.send(f"Deleted **{len(deleted)}** messages in #{ctx.channel.name}.")
+            await send_mod_log(
+                ctx.guild, "PURGE", target=None, moderator=ctx.author,
+                details=f"Bulk deleted {len(deleted)} messages in #{ctx.channel.name}"
+            )
 
     @purge.error
     async def purge_error(self, ctx, error):
