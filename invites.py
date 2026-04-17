@@ -81,7 +81,15 @@ class InviteTrackerCog(commands.Cog):
         # Update cache
         self.invite_cache[guild_id] = {inv.code: inv.uses for inv in current_invites}
 
-        # Welcome message — goes to #ticket-logs for testing, move to welcome channel later
+        # Assign The Wonderer role on join
+        wonderer_role = discord.utils.get(guild.roles, name="The Wanderer")
+        if wonderer_role:
+            try:
+                await member.add_roles(wonderer_role, reason="Auto-assigned on join")
+            except discord.Forbidden:
+                print(f"Missing permission to assign The Wonderer role to {member}")
+
+        # Welcome message
         welcome_channel = discord.utils.get(guild.text_channels, name="welcome-player")
         if welcome_channel:
             border = "─" * 35
