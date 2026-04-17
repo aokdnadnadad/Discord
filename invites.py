@@ -82,12 +82,16 @@ class InviteTrackerCog(commands.Cog):
         # Welcome message — goes to #ticket-logs for testing, move to welcome channel later
         welcome_channel = discord.utils.get(guild.text_channels, name="ticket-logs")
         if welcome_channel:
+            border = "─" * 40
             await welcome_channel.send(
+                f"{border}\n"
                 f"Welcome {member.mention} — you've found your way here for a reason.\n"
                 f"You are amongst the chosen now. Be the light in the Darkness. Clothing drop coming 5/21/26.\n"
                 f"Be ready, sign up at [obliveyon.com](<https://obliveyon.com>) to secure your place — "
-                f"and enter for a chance to win a free hoodie. 🖤⚔️"
+                f"and enter for a chance to win a free hoodie. 🖤⚔️\n"
+                f"{border}"
             )
+            await welcome_channel.send("https://cdn.discordapp.com/attachments/1049742034526806046/1490478452166627601/ezgif-8ea71cc67d438330.gif")
 
         if inviter is None or inviter.bot:
             return
