@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from music import MusicCog
 from invites import InviteTrackerCog
 from moderation import ModerationCog
+from warnings import WarningsCog
 
 load_dotenv()
 
@@ -17,6 +18,7 @@ intents.invites = True
 intents.voice_states = True
 
 ALLOWED_CHANNELS = ["bot-commands", "ticket-logs"]
+MOD_COMMANDS = {"purge", "warn", "clearwarnings", "memberssince"}
 
 bot = commands.Bot(command_prefix="?", intents=intents)
 
@@ -24,7 +26,7 @@ bot = commands.Bot(command_prefix="?", intents=intents)
 @bot.check
 async def restrict_to_allowed_channels(ctx):
     """Only allow commands in approved channels."""
-    if ctx.command and ctx.command.name == "purge":
+    if ctx.command and ctx.command.name in MOD_COMMANDS:
         return True
     if ctx.channel.name in ALLOWED_CHANNELS:
         return True
@@ -52,6 +54,9 @@ async def commands_list(ctx):
             "**?play <song>** — Play a song from YouTube\n"
             "**?skip** — Skip the current song\n"
             "**?queue** — Show the song queue\n"
+            "**?np** — Show the currently playing song\n"
+            "**?shuffle** — Shuffle the queue\n"
+            "**?remove <#>** — Remove a song from the queue by position\n"
             "**?pause** — Pause playback\n"
             "**?resume** — Resume playback\n"
             "**?stop** — Stop and clear the queue\n"
@@ -72,11 +77,45 @@ async def commands_list(ctx):
     await ctx.send(embed=embed)
 
 
+@bot.command(name="memberssince", hidden=True)
+async def members_since(ctx: commands.Context, *, date_str: str):
+    """List members who joined after a given date/time. Usage: ?memberssince YYYY-MM-DD HH:MM (EST)"""
+    has_owner = discord.utils.get(ctx.author.roles, name="Owner") is not None
+    if not has_owner:
+        return
+
+    import datetime, pytz
+    est = pytz.timezone("America/New_York")
+
+    try:
+        naive_dt = datetime.datetime.strptime(date_str.strip(), "%Y-%m-%d %H:%M")
+        cutoff = est.localize(naive_dt).astimezone(pytz.utc).replace(tzinfo=None)
+    except ValueError:
+        return await ctx.send("Invalid format. Use: `?memberssince YYYY-MM-DD HH:MM` (EST)", delete_after=10)
+
+    matched = [
+        m for m in ctx.guild.members
+        if not m.bot and m.joined_at and m.joined_at.replace(tzinfo=None) > cutoff
+    ]
+    matched.sort(key=lambda m: m.joined_at)
+
+    if not matched:
+        return await ctx.send("No members found after that date/time.", delete_after=10)
+
+    # Split into chunks of 50 mentions to avoid hitting Discord's 2000 char limit
+    chunk_size = 50
+    chunks = [matched[i:i+chunk_size] for i in range(0, len(matched), chunk_size)]
+    await ctx.send(f"Found **{len(matched)}** members — sending in chunks:")
+    for chunk in chunks:
+        await ctx.send(" ".join(m.mention for m in chunk))
+
+
 async def main():
     async with bot:
         await bot.add_cog(MusicCog(bot))
         await bot.add_cog(InviteTrackerCog(bot))
         await bot.add_cog(ModerationCog(bot))
+        await bot.add_cog(WarningsCog(bot))
         await bot.start(os.getenv("DISCORD_TOKEN"))
 
 
