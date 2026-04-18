@@ -8,6 +8,8 @@ from music import MusicCog
 from invites import InviteTrackerCog
 from moderation import ModerationCog
 from bot_warnings import WarningsCog
+from mute import MuteCog
+from audit_log import AuditLogCog
 
 load_dotenv()
 
@@ -18,7 +20,7 @@ intents.invites = True
 intents.voice_states = True
 
 ALLOWED_CHANNELS = ["bot-commands", "ticket-logs"]
-MOD_COMMANDS = {"purge", "warn", "clearwarnings", "memberssince"}
+MOD_COMMANDS = {"purge", "warn", "clearwarnings", "memberssince", "mute", "unmute"}
 
 bot = commands.Bot(command_prefix="?", intents=intents)
 
@@ -116,6 +118,8 @@ async def main():
         await bot.add_cog(InviteTrackerCog(bot))
         await bot.add_cog(ModerationCog(bot))
         await bot.add_cog(WarningsCog(bot))
+        await bot.add_cog(MuteCog(bot))
+        await bot.add_cog(AuditLogCog(bot))
         await bot.start(os.getenv("DISCORD_TOKEN"))
 
 

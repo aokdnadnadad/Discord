@@ -2,12 +2,17 @@ import discord
 
 # Embed colors per action type
 COLORS = {
-    "SLUR_DELETE": discord.Color.light_grey(),
-    "PURGE":       discord.Color.yellow(),
-    "WARN":        discord.Color.orange(),
-    "AUTO_TIMEOUT": discord.Color.red(),
-    "AUTO_KICK":   discord.Color.dark_red(),
-    "CLEAR_WARNS": discord.Color.blurple(),
+    "SLUR_DELETE":     discord.Color.light_grey(),
+    "PURGE":           discord.Color.yellow(),
+    "WARN":            discord.Color.orange(),
+    "AUTO_TIMEOUT":    discord.Color.red(),
+    "AUTO_KICK":       discord.Color.dark_red(),
+    "CLEAR_WARNS":     discord.Color.blurple(),
+    "MUTE":            discord.Color.orange(),
+    "UNMUTE":          discord.Color.green(),
+    "MANUAL_BAN":      discord.Color.dark_red(),
+    "MANUAL_KICK":     discord.Color.red(),
+    "MANUAL_MSG_DELETE": discord.Color.light_grey(),
 }
 
 
@@ -18,8 +23,8 @@ async def send_mod_log(
     moderator: discord.abc.User | None = None,
     details: str | None = None,
 ):
-    """Send a mod-log embed to the #mod-log channel (if it exists)."""
-    channel = discord.utils.get(guild.text_channels, name="mod-log")
+    """Send a mod-log embed to the #bot-log channel (if it exists)."""
+    channel = discord.utils.get(guild.text_channels, name="bot-log")
     if channel is None:
         return
 
@@ -41,4 +46,4 @@ async def send_mod_log(
     try:
         await channel.send(embed=embed)
     except discord.Forbidden:
-        print(f"Missing permission to send to #mod-log in {guild.name}")
+        print(f"Missing permission to send to #bot-log in {guild.name}")
