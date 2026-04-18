@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from music import MusicCog
 from invites import InviteTrackerCog
 from moderation import ModerationCog
-from warnings import WarningsCog
+from bot_warnings import WarningsCog
 
 load_dotenv()
 
